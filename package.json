@@ -1,0 +1,23 @@
+{
+  "name": "iosstringstoi18njson",
+  "version": "1.0.0",
+  "description": "",
+  "main": "stringsToJson.js",
+  "scripts": {
+    "stringsToJSON": "node stringsToJson.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edgarkhanzadyan/iosStringsToi18nJSON.git"
+  },
+  "author": "Edgar Khanzadian <edgar.khanzadian@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/edgarkhanzadyan/iosStringsToi18nJSON/issues"
+  },
+  "homepage": "https://github.com/edgarkhanzadyan/iosStringsToi18nJSON#readme",
+  "dependencies": {
+    "chalk": "^2.3.1",
+    "minimist": "^1.2.0"
+  }
+}

@@ -1,22 +1,31 @@
 const fs = require('fs');
 const minimist = require('minimist');
+const chalk = require('chalk');
+
+// trim
 const trimLine = line => line.trim();
-const filterEmptyLinesAndComments = line => line && line.substr(0, 2) !== '//'
-const replaceStringLiteralsToJSON = line =>  line
-                                            .replace(/"/g, '')
-                                            .trim()
-                                            .replace('=', ':');
-const addCommas = (line, id, arr) => arr.length - 1 !== id ? line.replace(';', ',\n') : line.replace(';', '\n');
-const splitOnDots = line => [line[0].split('.'), line.slice(1, line.length)];
-const splitOnColons = line => line.split(':');
+const trimLineArray = lineArr => lineArr.map(trimLine);
+
+const filterEmptyLinesAndComments = line => line && line.substr(0, 2) !== '//';
+
+const replaceQuotations = line =>  line.replace(/"/g, '');
+
+const deleteSemicolons = line => line.replace(';', '');
+
+const splitOnDots = line => [line[0].split('.'), line[1]];
+
+const splitOnEquals = line => line.split('=');
+
+const trace = line => (console.log(line), line);
+
 const groupInCategories = lines => {
     let tmp = '';
     let categoryObj = {};
     lines.map(lineArr => {
         const keys = lineArr[0];
-        const value = lineArr[1][0];
-        keys.reduce((acc, key, curId) => {
-            if(keys.length - 1 === curId) {
+        const value = lineArr[1];
+        keys.reduce((acc, key, i) => {
+            if(keys.length - 1 === i) {
                 acc[key] = value;
             } else if(!acc[key]) {
                 acc[key] = {};
@@ -30,21 +39,43 @@ const groupInCategories = lines => {
 
 const iosStringsToJson = () => {
     const args = minimist(process.argv.slice(2));
+    if (!args.i) {
+        const message = chalk.red('You have to provide input file with -i (e.g. -i path/to/input/file.strings)');
+        console.error(message);
+        process.exit(-1);
+    }
+    if (!args.o) {
+        const message = chalk.red('You have to provide output file with -i (e.g. -i path/to/output/file.strings)');
+        console.error(message);
+        process.exit(-1);
+    }
+    console.log(chalk.cyan(`reading file from ${args.i}`));
     fs.readFile(args.i, 'utf8', (err, data) => {
+        if (err) {
+            const message = chalk.red(err);
+            console.error(message);
+            process.exit(-1);
+        }
         const lines = 
             data
-            .split('\n')
-            .map(trimLine)
-            .filter(filterEmptyLinesAndComments)
-            .map(replaceStringLiteralsToJSON)
-            .map(addCommas)
-            .map(splitOnColons)
-            .map(splitOnDots);
+            .split('\n') // array of lines
+            .filter(filterEmptyLinesAndComments) // array of lines with only valuable info
+            .map(deleteSemicolons) // array of lines without semicolons
+            .map(replaceQuotations) // array of lines with json
+            .map(splitOnEquals) // array of arrays of 2 strings (left part - key, right part - value)
+            .map(trimLineArray) // trim strings in small arrays
+            .map(splitOnDots) // array of arrays. array[0] is an array of keys, array[1] is a value
 
-        const jsonLocalization = JSON.stringify(groupInCategories(lines), null, 2);
-        fs.writeFile(args.o, jsonLocalization, 'utf8', (err) => {
-            if (err) throw err;
-            console.log('file is saved ffs');
+        const jsonLocalization = groupInCategories(lines)
+        const stringifiedJSON = JSON.stringify(jsonLocalization, null, 2);
+        fs.writeFile(args.o, stringifiedJSON, 'utf8', (err) => {
+            if (err) {
+                const message = chalk.red(err);
+                console.error(message);
+                process.exit(-1);
+            }
+            const message = chalk.green(`file is saved at ${args.o}`)
+            console.log(message);
         })
     })
 }
