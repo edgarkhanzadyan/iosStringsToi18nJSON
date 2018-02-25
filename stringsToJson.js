@@ -10,6 +10,8 @@ const filterEmptyLinesAndComments = line => line && line.substr(0, 2) !== '//';
 
 const replaceQuotations = line =>  line.replace(/"/g, '');
 
+const deletePercentageCharacters = line => line.replace(/%[a-zA-Z@.\d]*/, '');
+
 const deleteSemicolons = line => line.replace(';', '');
 
 const splitOnDots = line => [line[0].split('.'), line[1]];
@@ -62,6 +64,7 @@ const iosStringsToJson = () => {
             .filter(filterEmptyLinesAndComments) // array of lines with only valuable info
             .map(deleteSemicolons) // array of lines without semicolons
             .map(replaceQuotations) // array of lines with json
+            .map(deletePercentageCharacters) // delete swift percentage characters
             .map(splitOnEquals) // array of arrays of 2 strings (left part - key, right part - value)
             .map(trimLineArray) // trim strings in small arrays
             .map(splitOnDots) // array of arrays. array[0] is an array of keys, array[1] is a value
